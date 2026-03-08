@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
-/* production backend */
-const SERVER_URL = "https://harsha-store.onrender.com";
+/* backend url from environment variable */
+const SERVER_URL = import.meta.env.VITE_API_URL;
 
 /* create single socket instance */
 const socket = io(SERVER_URL, {
   transports: ["websocket"],
-  reconnection: true
+  reconnection: true,
+  reconnectionAttempts: 10,
+  reconnectionDelay: 2000
 });
 
 export function useSocket() {
@@ -20,7 +22,7 @@ export function useSocket() {
 
     const handleConnect = () => {
       setConnected(true);
-      console.log("Socket connected");
+      console.log("Socket connected to:", SERVER_URL);
     };
 
     const handleDisconnect = () => {
