@@ -12,15 +12,20 @@ const fs = require("fs");
 const app = express();
 const server = http.createServer(app);
 
-/* ---------------- CORS ---------------- */
+/* ---------------- MIDDLEWARE ---------------- */
+
+app.use(express.json());
 
 app.use(cors({
-  origin: "https://my-store-hvz8.vercel.app",
+  origin: [
+    "https://my-store-hvz8.vercel.app",
+    "http://localhost:5173"
+  ],
   methods: ["GET", "POST"],
   credentials: true
 }));
 
-/* ---------------- Socket Setup ---------------- */
+/* ---------------- SOCKET SETUP ---------------- */
 
 const io = new Server(server, {
   cors: {
@@ -28,15 +33,20 @@ const io = new Server(server, {
       "https://my-store-hvz8.vercel.app",
       "http://localhost:5173"
     ],
-    methods: ["GET", "POST"],
-    credentials: true
+    methods: ["GET", "POST"]
   },
   transports: ["websocket"],
   pingTimeout: 60000,
   pingInterval: 25000
 });
 
-/* ---------------- Upload Folder ---------------- */
+/* ---------------- ROOT ROUTE ---------------- */
+
+app.get("/", (req, res) => {
+  res.send("Harsha Store API is running 🚀");
+});
+
+/* ---------------- UPLOAD FOLDER ---------------- */
 
 const uploadPath = path.join(__dirname, "uploads");
 
@@ -46,7 +56,7 @@ if (!fs.existsSync(uploadPath)) {
 
 app.use("/uploads", express.static(uploadPath));
 
-/* ---------------- Upload Setup ---------------- */
+/* ---------------- UPLOAD SETUP ---------------- */
 
 const storage = multer.diskStorage({
   destination: uploadPath,
@@ -60,7 +70,7 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-/* ---------------- Fake Live Data ---------------- */
+/* ---------------- FAKE LIVE DATA ---------------- */
 
 let onlineUsers = 247;
 let liveOrders = 12;
@@ -77,7 +87,7 @@ setInterval(() => {
 
 }, 3000);
 
-/* ---------------- Products API ---------------- */
+/* ---------------- PRODUCTS API ---------------- */
 
 app.get("/api/products", (req, res) => {
 
@@ -92,11 +102,11 @@ app.get("/api/products", (req, res) => {
 
 });
 
-/* ---------------- Upload API ---------------- */
+/* ---------------- UPLOAD API ---------------- */
 
 app.post("/api/upload", upload.array("images", 4), (req, res) => {
 
-  const files = req.files.map(f => `/uploads/${f.filename}`);
+  const files = req.files.map(file => `/uploads/${file.filename}`);
 
   res.json({
     success: true,
@@ -105,7 +115,7 @@ app.post("/api/upload", upload.array("images", 4), (req, res) => {
 
 });
 
-/* ---------------- Orders API ---------------- */
+/* ---------------- ORDERS API ---------------- */
 
 app.post("/api/orders", (req, res) => {
 
@@ -134,19 +144,21 @@ app.post("/api/orders", (req, res) => {
 
 });
 
+/* ---------------- GET ORDER BY ID ---------------- */
+
 app.get("/api/orders/:id", (req, res) => {
 
   const order = orders.find(o => o.id === req.params.id);
 
   if (!order) {
-    return res.status(404).json({ error:"Order not found" });
+    return res.status(404).json({ error: "Order not found" });
   }
 
   res.json(order);
 
 });
 
-/* ---------------- Stats API ---------------- */
+/* ---------------- STATS API ---------------- */
 
 app.get("/api/stats", (req, res) => {
 
@@ -157,7 +169,7 @@ app.get("/api/stats", (req, res) => {
 
 });
 
-/* ---------------- Socket Events ---------------- */
+/* ---------------- SOCKET EVENTS ---------------- */
 
 io.on("connection", (socket) => {
 
@@ -200,7 +212,7 @@ io.on("connection", (socket) => {
 
 });
 
-/* ---------------- Start Server ---------------- */
+/* ---------------- START SERVER ---------------- */
 
 const PORT = process.env.PORT || 4000;
 
