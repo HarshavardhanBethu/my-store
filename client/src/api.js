@@ -9,6 +9,10 @@ export const createOrder = async (orderData) => {
     body: JSON.stringify(orderData)
   });
 
+  if (!res.ok) {
+    throw new Error(`Server error: ${res.status}`);
+  }
+
   return res.json();
 };
 
