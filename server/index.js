@@ -23,9 +23,16 @@ app.use(express.json());
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
+    origin: [
+      "https://my-store-hvz8.vercel.app",
+      "http://localhost:5173"
+    ],
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  transports: ["websocket"],
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
 /* ---------------- Upload Folder ---------------- */
