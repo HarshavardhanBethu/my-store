@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
+/* production backend */
 const SERVER_URL = "https://harsha-store.onrender.com";
 
+/* create single socket instance */
 const socket = io(SERVER_URL, {
-  transports: ["websocket"], 
-  upgrade: false
+  transports: ["websocket", "polling"],
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 2000
 });
-
 export function useSocket() {
 
   const [connected, setConnected] = useState(false);
@@ -16,31 +19,69 @@ export function useSocket() {
 
   useEffect(() => {
 
-    socket.on("connect", () => {
+    const handleConnect = () => {
       setConnected(true);
       console.log("Socket connected");
-    });
+    };
 
-    socket.on("disconnect", () => {
+    const handleDisconnect = () => {
       setConnected(false);
-    });
+      console.log("Socket disconnected");
+    };
 
-    socket.on("live_stats", ({ onlineUsers, liveOrders }) => {
+    const handleStats = ({ onlineUsers, liveOrders }) => {
       setOnlineUsers(onlineUsers);
       setLiveOrders(liveOrders);
-    });
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("live_stats", handleStats);
 
     return () => {
-      socket.off("connect");
-      socket.off("disconnect");
-      socket.off("live_stats");
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("live_stats", handleStats);
     };
 
   }, []);
 
+  /* -------- PRICE CALCULATION -------- */
+
+  const calculatePrice = (data, onProgress, onResult) => {
+
+    socket.off("price_progress");
+    socket.off("price_result");
+
+    socket.emit("calculate_price", data);
+
+    socket.on("price_progress", (progress) => {
+      if (onProgress) onProgress(progress);
+    });
+
+    socket.once("price_result", (result) => {
+      if (onResult) onResult(result);
+    });
+
+  };
+
+  /* -------- ORDER TRACKING -------- */
+
+  const subscribeOrderUpdates = (orderId, callback) => {
+
+    const eventName = `order_update_${orderId}`;
+
+    socket.on(eventName, callback);
+
+    return () => socket.off(eventName, callback);
+
+  };
+
   return {
     connected,
     onlineUsers,
-    liveOrders
+    liveOrders,
+    calculatePrice,
+    subscribeOrderUpdates
   };
 }
