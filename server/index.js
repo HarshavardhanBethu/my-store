@@ -14,17 +14,17 @@ const server = http.createServer(app);
 
 /* ---------------- MIDDLEWARE ---------------- */
 
-app.use(express.json());
-
 app.use(cors({
   origin: [
     "https://my-store-hvz8.vercel.app",
     "http://localhost:5173"
   ],
-  methods: ["GET", "POST"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type"],
   credentials: true
 }));
 
+app.use(express.json());
 /* ---------------- SOCKET SETUP ---------------- */
 
 const io = new Server(server, {
