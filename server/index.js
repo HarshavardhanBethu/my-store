@@ -14,7 +14,9 @@ const server = http.createServer(app);
 
 /* ---------------- CORS ---------------- */
 
-app.use(cors());
+app.use(cors({
+  origin: "https://my-store-hvz8.vercel.app"
+}));
 app.use(express.json());
 
 /* ---------------- Socket Setup ---------------- */
