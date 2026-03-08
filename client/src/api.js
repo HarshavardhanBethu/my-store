@@ -1,4 +1,4 @@
-const API_URL = "https://harsha-store.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const createOrder = async (orderData) => {
   const res = await fetch(`${API_URL}/api/orders`, {
